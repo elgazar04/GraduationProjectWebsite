@@ -15,7 +15,7 @@ export default function Header() {
     if (!user) return '/';
     if (user.role === 'doctor') return '/doctor/dashboard';
     if (user.role === 'admin') return '/admin/dashboard';
-    return '/patient/upload';
+    return '/patient/dashboard';
   };
 
   return (

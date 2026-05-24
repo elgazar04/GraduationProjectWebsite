@@ -21,17 +21,11 @@ router.post('/register', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Insert into Users table
-    const [userResult] = await db.query(
-      'INSERT INTO Users (email, password_hash, name, role) VALUES (?, ?, ?, ?)',
-      [email, hashedPassword, name, 'patient']
-    );
-    // MySQL LAST_INSERT_ID() only works well with AUTO_INCREMENT, but we used UUID(). 
-    // Wait, the schema uses DEFAULT (UUID()). We can't get the generated ID easily from the INSERT result unless we generate it in Node first.
     // Let's generate UUID in node.
     const { v4: uuidv4 } = require('uuid');
     const userId = uuidv4();
-    
+
+    // Insert into Users table (single insert)
     await db.query(
       'INSERT INTO Users (id, email, password_hash, name, role) VALUES (?, ?, ?, ?, ?)',
       [userId, email, hashedPassword, name, 'patient']
@@ -134,12 +128,70 @@ router.get('/me', protect, async (req, res) => {
 // @route   PUT /api/auth/profile/patient
 router.put('/profile/patient', protect, async (req, res) => {
   if (req.user.role !== 'patient') return res.status(403).json({ message: 'Only patients can update this profile' });
-  const { age, gender, headache_severity, functional_status, neurological_symptoms, comorbidities } = req.body;
+  const { 
+    name, age, gender, smoking_status, diabetes, hypertension,
+    prior_cancer, prior_brain_surgery, immunosuppressed, seizures,
+    headache_severity, symptom_duration_weeks, functional_status, neurological_symptoms
+  } = req.body;
   
+  const functionalStatusMap = {
+    'Independent': 'independent',
+    'Some help': 'needs_some_help',
+    'Significant help': 'needs_significant_help',
+    'Bed-bound': 'fully_dependent'
+  };
+  const dbFunctionalStatus = functionalStatusMap[functional_status] || 'independent';
+
+  const neurologicalSymptomsMap = {
+    0: 'none',
+    1: 'mild',
+    2: 'moderate',
+    3: 'severe'
+  };
+  const dbNeurologicalSymptoms = neurologicalSymptomsMap[neurological_symptoms] || 'none';
+
+  const comorbiditiesStr = `Diabetes: ${diabetes ? 'Yes' : 'No'}, Hypertension: ${hypertension ? 'Yes' : 'No'}`;
+
   try {
+    // Update name in Users table
+    if (name) {
+      await db.query('UPDATE Users SET name = ? WHERE id = ?', [name, req.user.id]);
+    }
+
     await db.query(
-      'UPDATE PatientProfiles SET age = ?, gender = ?, headache_severity = ?, functional_status = ?, neurological_symptoms = ?, comorbidities = ? WHERE user_id = ?',
-      [age, gender, headache_severity, functional_status, neurological_symptoms, comorbidities, req.user.id]
+      `UPDATE PatientProfiles SET 
+        age = ?, 
+        gender = ?, 
+        smoking_status = ?, 
+        diabetes = ?, 
+        hypertension = ?, 
+        family_cancer_history = ?, 
+        previous_treatment = ?, 
+        immunosuppressed = ?, 
+        seizure_history = ?, 
+        headache_severity = ?, 
+        symptom_duration_weeks = ?, 
+        functional_status = ?, 
+        neurological_symptoms = ?, 
+        comorbidities = ? 
+      WHERE user_id = ?`,
+      [
+        age || null,
+        gender || null,
+        smoking_status || 'Never',
+        diabetes ? 1 : 0,
+        hypertension ? 1 : 0,
+        prior_cancer ? 1 : 0,
+        prior_brain_surgery ? 1 : 0,
+        immunosuppressed ? 1 : 0,
+        seizures ? 1 : 0,
+        headache_severity || 5,
+        symptom_duration_weeks || 4,
+        dbFunctionalStatus,
+        dbNeurologicalSymptoms,
+        comorbiditiesStr,
+        req.user.id
+      ]
     );
     res.json({ message: 'Profile updated' });
   } catch (err) {

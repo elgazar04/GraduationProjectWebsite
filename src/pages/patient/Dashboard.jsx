@@ -18,10 +18,10 @@ export default function Dashboard() {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
       
-      const scansRes = await fetch('http://localhost:5000/api/scans/history/me', { headers });
+      const scansRes = await fetch('http://127.0.0.1:5000/api/scans/history/me', { headers });
       if (scansRes.ok) setScans(await scansRes.json());
       
-      const consultsRes = await fetch('http://localhost:5000/api/consultations/me', { headers });
+      const consultsRes = await fetch('http://127.0.0.1:5000/api/consultations/me', { headers });
       if (consultsRes.ok) setConsultations(await consultsRes.json());
     } catch (err) {
       console.error('Error fetching dashboard data', err);
@@ -48,7 +48,13 @@ export default function Dashboard() {
           <div className="dashboard-card" style={{ background: 'rgba(30,144,255,0.05)', border: '1px solid rgba(30,144,255,0.2)', padding: '24px', borderRadius: '16px' }}>
             <h3 style={{ marginBottom: '16px', color: '#1e90ff' }}>New Analysis</h3>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>Upload a new MRI scan for instant AI analysis.</p>
-            <Link to="/patient/upload" className="btn btn--glow" style={{ width: '100%', justifyContent: 'center' }}>Upload MRI Scan</Link>
+            <Link 
+              to={user?.profile?.age && user?.profile?.gender ? "/patient/upload" : "/patient/intake"} 
+              className="btn btn--glow" 
+              style={{ width: '100%', justifyContent: 'center' }}
+            >
+              Upload MRI Scan
+            </Link>
           </div>
 
           {/* Upcoming Consultations */}
@@ -126,26 +132,54 @@ export default function Dashboard() {
                 <tr><td colSpan="4" style={{ padding: '16px', textAlign: 'center' }}>Loading...</td></tr>
               ) : scans.length === 0 ? (
                 <tr><td colSpan="4" style={{ padding: '16px', textAlign: 'center', color: 'var(--text-secondary)' }}>No scans found.</td></tr>
-              ) : scans.map(scan => (
-                <tr key={scan.id} style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                  <td style={{ padding: '16px' }}>{new Date(scan.created_at).toLocaleDateString()}</td>
-                  <td style={{ padding: '16px' }}>{scan.id}</td>
-                  <td style={{ padding: '16px' }}>
-                    <span style={{ 
-                      color: scan.status === 'completed' && scan.triage_tier === 1 ? '#ef4444' : scan.status === 'completed' ? '#10b981' : '#f59e0b', 
-                      background: scan.status === 'completed' && scan.triage_tier === 1 ? 'rgba(239,68,68,0.1)' : scan.status === 'completed' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', 
-                      padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', textTransform: 'capitalize' 
-                    }}>
-                      {scan.status}
-                    </span>
-                  </td>
-                  <td style={{ padding: '16px' }}>
-                    {scan.status === 'completed' && (
-                      <Link to={`/patient/results/${scan.id}`} style={{ color: '#1e90ff', textDecoration: 'none' }}>View Report</Link>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              ) : scans.map(scan => {
+                const isEmergency = scan.triage_tier === 1 || scan.triage_tier === 'emergency';
+                const isUrgent = scan.triage_tier === 2 || scan.triage_tier === 'urgent';
+                const isCompleted = scan.status === 'completed';
+                
+                let badgeColor = '#f59e0b';
+                let badgeBg = 'rgba(245,158,11,0.1)';
+                if (isCompleted) {
+                  if (isEmergency) {
+                    badgeColor = '#ef4444';
+                    badgeBg = 'rgba(239,68,68,0.1)';
+                  } else if (isUrgent) {
+                    badgeColor = '#f59e0b';
+                    badgeBg = 'rgba(245,158,11,0.1)';
+                  } else {
+                    badgeColor = '#10b981';
+                    badgeBg = 'rgba(16,185,129,0.1)';
+                  }
+                }
+
+                const scanIdVal = scan.id || scan._id;
+                const scanDateVal = scan.created_at || scan.uploadDate || scan.date;
+
+                return (
+                  <tr key={scanIdVal} style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    <td style={{ padding: '16px' }}>{scanDateVal ? new Date(scanDateVal).toLocaleDateString() : 'N/A'}</td>
+                    <td style={{ padding: '16px', fontSize: '0.85rem', fontFamily: 'monospace' }}>{scanIdVal || 'N/A'}</td>
+                    <td style={{ padding: '16px' }}>
+                      <span style={{ 
+                        color: badgeColor,
+                        background: badgeBg,
+                        padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', textTransform: 'capitalize', fontWeight: '600'
+                      }}>
+                        {scan.status} {isCompleted && `(${scan.tumor_type || scan.results?.classification || 'Normal'})`}
+                      </span>
+                    </td>
+                    <td style={{ padding: '16px' }}>
+                      {isCompleted && scanIdVal ? (
+                        <Link to={`/patient/results/${scanIdVal}`} style={{ color: '#1e90ff', textDecoration: 'none', fontWeight: '500' }}>View Report</Link>
+                      ) : isCompleted ? (
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>No ID</span>
+                      ) : (
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Processing...</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

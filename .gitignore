@@ -12,6 +12,21 @@ dist
 dist-ssr
 *.local
 
+# Python virtual environments
+venv/
+.venv/
+ENV/
+env/
+backend/ai-service/venv/
+
+# Backend uploads
+backend/uploads/
+backend/uploads/*
+
+# Large ML/DL model files (if you want to keep them out of git)
+*.h5
+*.pkl
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

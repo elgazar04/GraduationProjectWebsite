@@ -55,6 +55,16 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const userData = await authService.getMe();
+      setUser(userData);
+      return userData;
+    } catch (err) {
+      console.error('Failed to refresh user data:', err);
+    }
+  }, []);
+
   const value = { 
     user, 
     loading, 
@@ -62,6 +72,7 @@ export function AuthProvider({ children }) {
     register, 
     registerDoctor,
     logout, 
+    refreshUser,
     isAuthenticated: !!user,
     role: user?.role || null
   };

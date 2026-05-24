@@ -20,7 +20,7 @@ export default function Footer() {
           <div className="footer__col">
             <h4 className="footer__heading">Platform</h4>
             <ul className="footer__links">
-              <li><Link to="/patient/upload">Upload MRI</Link></li>
+              <li><Link to="/patient/intake">Upload MRI</Link></li>
               <li><Link to="/patient/doctors">Find a Doctor</Link></li>
               <li><Link to="/info/tumors">Tumor Info</Link></li>
               <li><Link to="/info/faq">FAQ</Link></li>

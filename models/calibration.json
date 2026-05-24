@@ -1,0 +1,10 @@
+{
+  "temperature": 1.8874216221703113,
+  "classes": [
+    "glioma",
+    "meningioma",
+    "notumor",
+    "pituitary"
+  ],
+  "img_size": 224
+}

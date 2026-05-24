@@ -94,8 +94,8 @@ export default function IntakeWizard() {
   return (
     <main className="page-container" style={{ padding: '40px 24px', minHeight: 'calc(100vh - 80px)' }}>
       <div className="form-wrapper" style={{ maxWidth: '650px' }}>
-        <h1 className="page-title" style={{ textAlign: 'center' }}>Medical Intake</h1>
-        <p className="page-subtitle" style={{ textAlign: 'center' }}>Please provide context for the AI analysis</p>
+        <h1 className="page-title" style={{ textAlign: 'center' }}>Clinical Medical Intake</h1>
+        <p className="page-subtitle" style={{ textAlign: 'center' }}>Provide clinical details to guide the AI classification and suggestion engine</p>
 
         <StepIndicator currentStep={currentStep} totalSteps={totalSteps} />
 
@@ -103,126 +103,139 @@ export default function IntakeWizard() {
           
           {/* Step 1: Personal Info */}
           <FormStep isActive={currentStep === 0}>
-            <h3 style={{ fontSize: '1.2rem', marginBottom: '24px', color: '#1e90ff' }}>1. Personal Information</h3>
+            <h3 style={{ fontSize: '1.2rem', marginBottom: '24px', color: '#1e90ff' }}>1. Demographic Data</h3>
             <div className="form-group-row">
               <div className="form-group">
-                <label>Age</label>
-                <input type="number" required value={formData.age} onChange={e => setFormData({...formData, age: e.target.value})} placeholder="e.g. 45" />
+                <label>Age (years)</label>
+                <input type="number" required min="0" max="120" value={formData.age} onChange={e => setFormData({...formData, age: e.target.value})} placeholder="e.g. 45" />
               </div>
               <div className="form-group">
-                <label>Gender</label>
+                <label>Biological Sex</label>
                 <select required value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value})}>
                   <option value="">Select</option>
                   <option value="male">Male</option>
                   <option value="female">Female</option>
-                  <option value="other">Other</option>
                 </select>
-              </div>
-            </div>
-            <div className="form-group-row">
-              <div className="form-group">
-                <label>Weight (kg)</label>
-                <input type="number" required value={formData.weight} onChange={e => setFormData({...formData, weight: e.target.value})} placeholder="e.g. 70" />
-              </div>
-              <div className="form-group">
-                <label>Height (cm)</label>
-                <input type="number" required value={formData.height} onChange={e => setFormData({...formData, height: e.target.value})} placeholder="e.g. 175" />
               </div>
             </div>
           </FormStep>
 
-          {/* Step 2: Medical History */}
+          {/* Step 2: Systemic History */}
           <FormStep isActive={currentStep === 1}>
-            <h3 style={{ fontSize: '1.2rem', marginBottom: '24px', color: '#1e90ff' }}>2. Medical History</h3>
-            <div className="form-group">
-              <label>Family history of brain tumors?</label>
-              <select value={formData.tumor_history_family} onChange={e => setFormData({...formData, tumor_history_family: e.target.value})}>
-                <option value="no">No</option>
-                <option value="yes">Yes</option>
-                <option value="unknown">Unknown</option>
-              </select>
+            <h3 style={{ fontSize: '1.2rem', marginBottom: '24px', color: '#1e90ff' }}>2. Systemic & Immunological History</h3>
+            <div className="form-group-row">
+              <div className="form-group">
+                <label>Diabetes Diagnosis?</label>
+                <select value={formData.diabetes ? 'yes' : 'no'} onChange={e => setFormData({...formData, diabetes: e.target.value === 'yes'})}>
+                  <option value="no">No</option>
+                  <option value="yes">Yes</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Hypertension Diagnosis?</label>
+                <select value={formData.hypertension ? 'yes' : 'no'} onChange={e => setFormData({...formData, hypertension: e.target.value === 'yes'})}>
+                  <option value="no">No</option>
+                  <option value="yes">Yes</option>
+                </select>
+              </div>
             </div>
+            <div className="form-group-row" style={{ marginTop: '16px' }}>
+              <div className="form-group">
+                <label>Prior Cancer / Oncology History?</label>
+                <select value={formData.prior_cancer ? 'yes' : 'no'} onChange={e => setFormData({...formData, prior_cancer: e.target.value === 'yes'})}>
+                  <option value="no">No</option>
+                  <option value="yes">Yes</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Immunosuppressed State?</label>
+                <select value={formData.immunosuppressed ? 'yes' : 'no'} onChange={e => setFormData({...formData, immunosuppressed: e.target.value === 'yes'})}>
+                  <option value="no">No</option>
+                  <option value="yes">Yes (e.g., Chemo, Corticosteroids)</option>
+                </select>
+              </div>
+            </div>
+          </FormStep>
+
+          {/* Step 3: Neurological History */}
+          <FormStep isActive={currentStep === 2}>
+            <h3 style={{ fontSize: '1.2rem', marginBottom: '24px', color: '#1e90ff' }}>3. Neurological & Surgical History</h3>
             <div className="form-group">
               <label>Prior Brain Surgery?</label>
-              <select value={formData.prior_surgery} onChange={e => setFormData({...formData, prior_surgery: e.target.value})}>
+              <select value={formData.prior_brain_surgery ? 'yes' : 'no'} onChange={e => setFormData({...formData, prior_brain_surgery: e.target.value === 'yes'})}>
                 <option value="no">No</option>
                 <option value="yes">Yes</option>
               </select>
             </div>
-            <div className="form-group-row">
-              <div className="form-group">
-                <label>Prior Radiation?</label>
-                <select value={formData.prior_radiation} onChange={e => setFormData({...formData, prior_radiation: e.target.value})}>
-                  <option value="no">No</option>
-                  <option value="yes">Yes</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Prior Chemotherapy?</label>
-                <select value={formData.prior_chemo} onChange={e => setFormData({...formData, prior_chemo: e.target.value})}>
-                  <option value="no">No</option>
-                  <option value="yes">Yes</option>
-                </select>
-              </div>
-            </div>
-          </FormStep>
-
-          {/* Step 3: Current Symptoms */}
-          <FormStep isActive={currentStep === 2}>
-            <h3 style={{ fontSize: '1.2rem', marginBottom: '24px', color: '#1e90ff' }}>3. Current Symptoms</h3>
-            <div className="form-group">
-              <label>Select all that apply:</label>
-              <SymptomChecklist formData={formData} setFormData={setFormData} />
-            </div>
-          </FormStep>
-
-          {/* Step 4: Symptom Details */}
-          <FormStep isActive={currentStep === 3}>
-            <h3 style={{ fontSize: '1.2rem', marginBottom: '24px', color: '#1e90ff' }}>4. Symptom Details</h3>
-            <div className="form-group">
-              <label>How many months have you experienced these?</label>
-              <input type="number" required={formData.symptom_headache || formData.symptom_seizure || formData.symptom_vision || formData.symptom_cognitive} value={formData.symptom_duration_months} onChange={e => setFormData({...formData, symptom_duration_months: e.target.value})} placeholder="e.g. 3" />
-            </div>
-            <SeveritySlider 
-              label="Overall Symptom Severity" 
-              value={formData.symptom_severity} 
-              onChange={e => setFormData({...formData, symptom_severity: e.target.value})} 
-            />
-          </FormStep>
-
-          {/* Step 5: Lifestyle */}
-          <FormStep isActive={currentStep === 4}>
-            <h3 style={{ fontSize: '1.2rem', marginBottom: '24px', color: '#1e90ff' }}>5. Lifestyle & Health</h3>
-            <div className="form-group">
-              <label>Smoking Status</label>
-              <select value={formData.smoking_status} onChange={e => setFormData({...formData, smoking_status: e.target.value})}>
-                <option value="never">Never Smoked</option>
-                <option value="former">Former Smoker</option>
-                <option value="current">Current Smoker</option>
+            <div className="form-group" style={{ marginTop: '16px' }}>
+              <label>History of Seizures / Convulsions?</label>
+              <select value={formData.seizures ? 'yes' : 'no'} onChange={e => setFormData({...formData, seizures: e.target.value === 'yes'})}>
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
               </select>
             </div>
-            <SeveritySlider 
-              label="Overall Health Score (1=Poor, 10=Excellent)" 
-              value={formData.overall_health_score} 
-              onChange={e => setFormData({...formData, overall_health_score: e.target.value})} 
-            />
+          </FormStep>
+
+          {/* Step 4: Current Symptoms */}
+          <FormStep isActive={currentStep === 3}>
+            <h3 style={{ fontSize: '1.2rem', marginBottom: '24px', color: '#1e90ff' }}>4. Symptom Profile & Duration</h3>
+            <div className="form-group">
+              <label>Symptom Duration (weeks)</label>
+              <input type="number" required min="1" max="1000" value={formData.symptom_duration_weeks} onChange={e => setFormData({...formData, symptom_duration_weeks: e.target.value})} placeholder="e.g. 4 weeks" />
+            </div>
+            
+            <div className="form-group" style={{ marginTop: '20px' }}>
+              <label>Neurological Symptoms Severity</label>
+              <select value={formData.neurological_symptoms} onChange={e => setFormData({...formData, neurological_symptoms: parseInt(e.target.value)})}>
+                <option value="0">None / Normal neurological status</option>
+                <option value="1">Mild (Minor coordination/vision changes)</option>
+                <option value="2">Moderate (Focal deficits, language difficulty)</option>
+                <option value="3">Severe (Hemiparesis, cognitive deterioration)</option>
+              </select>
+            </div>
+
+            <div style={{ marginTop: '20px' }}>
+              <SeveritySlider 
+                label="Headache Severity" 
+                value={formData.headache_severity} 
+                onChange={e => setFormData({...formData, headache_severity: parseInt(e.target.value)})} 
+              />
+            </div>
+          </FormStep>
+
+          {/* Step 5: Functional & Lifestyle */}
+          <FormStep isActive={currentStep === 4}>
+            <h3 style={{ fontSize: '1.2rem', marginBottom: '24px', color: '#1e90ff' }}>5. Functional Status & Lifestyle</h3>
+            <div className="form-group">
+              <label>Functional Status (Independence Level)</label>
+              <select value={formData.functional_status} onChange={e => setFormData({...formData, functional_status: e.target.value})}>
+                <option value="Independent">Independent (Fully self-sufficient)</option>
+                <option value="Some help">Some help (Needs minor daily assistance)</option>
+                <option value="Significant help">Significant help (Requires intensive daily care)</option>
+                <option value="Bed-bound">Bed-bound (Completely dependent)</option>
+              </select>
+            </div>
+            
+            <div className="form-group" style={{ marginTop: '20px' }}>
+              <label>Smoking Status</label>
+              <select value={formData.smoking_status} onChange={e => setFormData({...formData, smoking_status: e.target.value})}>
+                <option value="Never">Never</option>
+                <option value="Former">Former</option>
+                <option value="Current">Current</option>
+              </select>
+            </div>
           </FormStep>
 
           {/* Step 6: Review */}
           <FormStep isActive={currentStep === 5}>
-            <h3 style={{ fontSize: '1.2rem', marginBottom: '24px', color: '#10b981' }}>6. Review & Submit</h3>
-            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', fontSize: '0.9rem', lineHeight: '1.8' }}>
-              <p><strong>Age/Gender:</strong> {formData.age || '--'}, {formData.gender || '--'}</p>
-              <p><strong>Family History:</strong> {formData.tumor_history_family}</p>
-              <p><strong>Symptoms:</strong> {
-                [
-                  formData.symptom_headache && 'Headaches',
-                  formData.symptom_seizure && 'Seizures',
-                  formData.symptom_vision && 'Vision',
-                  formData.symptom_cognitive && 'Cognitive'
-                ].filter(Boolean).join(', ') || 'None'
-              } (Severity: {formData.symptom_severity}/10)</p>
-              <p><strong>Prior Treatments:</strong> Surgery({formData.prior_surgery}), Radiation({formData.prior_radiation}), Chemo({formData.prior_chemo})</p>
+            <h3 style={{ fontSize: '1.2rem', marginBottom: '24px', color: '#10b981' }}>6. Clinical Verification</h3>
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', fontSize: '0.95rem', lineHeight: '2' }}>
+              <p><strong>Age / Biological Sex:</strong> {formData.age || '--'}, {formData.gender || '--'}</p>
+              <p><strong>Systemic Diseases:</strong> Diabetes ({formData.diabetes ? 'Yes' : 'No'}), Hypertension ({formData.hypertension ? 'Yes' : 'No'})</p>
+              <p><strong>Cancer / Immunological:</strong> Prior Cancer ({formData.prior_cancer ? 'Yes' : 'No'}), Immunosuppressed ({formData.immunosuppressed ? 'Yes' : 'No'})</p>
+              <p><strong>Neurological History:</strong> Prior Brain Surgery ({formData.prior_brain_surgery ? 'Yes' : 'No'}), Seizures ({formData.seizures ? 'Yes' : 'No'})</p>
+              <p><strong>Symptom Profile:</strong> Duration ({formData.symptom_duration_weeks} weeks), Headache ({formData.headache_severity}/10), Neurological Deficit (Level {formData.neurological_symptoms})</p>
+              <p><strong>Functional Status:</strong> {formData.functional_status} (Smoking: {formData.smoking_status})</p>
             </div>
           </FormStep>
 

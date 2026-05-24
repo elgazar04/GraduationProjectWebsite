@@ -1,0 +1,113 @@
+{
+  "feature_columns": [
+    "age",
+    "sex",
+    "smoking_status",
+    "diabetes",
+    "hypertension",
+    "prior_cancer",
+    "prior_brain_surgery",
+    "immunosuppressed",
+    "seizures",
+    "headache_severity",
+    "symptom_duration_weeks",
+    "functional_status",
+    "neurological_symptoms",
+    "tumor_type",
+    "tumor_location",
+    "tumor_size_mm2",
+    "hemisphere"
+  ],
+  "numeric_columns": [
+    "age",
+    "diabetes",
+    "hypertension",
+    "prior_cancer",
+    "prior_brain_surgery",
+    "immunosuppressed",
+    "seizures",
+    "headache_severity",
+    "symptom_duration_weeks",
+    "neurological_symptoms",
+    "tumor_size_mm2"
+  ],
+  "categorical_columns": [
+    "sex",
+    "smoking_status",
+    "functional_status",
+    "tumor_type",
+    "tumor_location",
+    "hemisphere"
+  ],
+  "target_columns": [
+    "treatment_plan",
+    "urgency_level",
+    "triage_tier"
+  ],
+  "feature_encoders": {
+    "sex": [
+      "F",
+      "M"
+    ],
+    "smoking_status": [
+      "Current",
+      "Former",
+      "Never"
+    ],
+    "functional_status": [
+      "Bed-bound",
+      "Independent",
+      "Significant help",
+      "Some help"
+    ],
+    "tumor_type": [
+      "glioma",
+      "meningioma",
+      "pituitary"
+    ],
+    "tumor_location": [
+      "Frontal",
+      "Occipital",
+      "Parietal",
+      "Sellar",
+      "Temporal"
+    ],
+    "hemisphere": [
+      "L",
+      "M",
+      "R"
+    ]
+  },
+  "target_encoders": {
+    "treatment_plan": [
+      "Biopsy+staging",
+      "Dopamine agonist",
+      "Emergency surgery",
+      "Palliative",
+      "SRS",
+      "Surgery",
+      "Surgery+CRT",
+      "Surgery+RT",
+      "Trans-sphenoidal",
+      "Watch & wait"
+    ],
+    "urgency_level": [
+      "Elective",
+      "Emergency",
+      "Urgent"
+    ],
+    "triage_tier": [
+      "Emergency",
+      "Routine",
+      "Urgent"
+    ]
+  },
+  "best_params": {
+    "subsample": 1.0,
+    "n_estimators": 200,
+    "min_child_weight": 3,
+    "max_depth": 8,
+    "learning_rate": 0.01,
+    "colsample_bytree": 0.9
+  }
+}

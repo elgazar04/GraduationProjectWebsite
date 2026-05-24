@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useParams, Navigate } from 'react-router-dom';
 import { usePatientContext } from '../../contexts/PatientContext';
+import { scanService } from '../../services/scanService';
 import './PatientPages.css';
 
 // Subcomponents for Results Page
@@ -162,13 +163,64 @@ const ShareReportPrompt = ({ scanId }) => {
 
 export default function ScanResults() {
   const { scanId } = useParams();
-  const { analysisResults, currentScan } = usePatientContext();
+  const { analysisResults, setResults } = usePatientContext();
+  const [localReport, setLocalReport] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  if (!analysisResults) {
-    return <Navigate to="/patient/upload" />;
+  useEffect(() => {
+    const fetchReport = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        // Check if context has correct report already loaded
+        if (analysisResults && (analysisResults.id === scanId || analysisResults._id === scanId)) {
+          setLocalReport(analysisResults);
+        } else {
+          // Fetch from backend
+          const fetched = await scanService.getScanResults(scanId);
+          setLocalReport(fetched);
+          setResults(fetched); // sync back to context if needed
+        }
+      } catch (err) {
+        console.error('Error loading report:', err);
+        setError('Failed to load report. Please make sure the scan exists.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (scanId) {
+      fetchReport();
+    }
+  }, [scanId, analysisResults, setResults]);
+
+  if (loading) {
+    return (
+      <main className="page-container" style={{ padding: '80px 24px', minHeight: 'calc(100vh - 80px)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="analysis-brain-loader" style={{ fontSize: '3.5rem', marginBottom: '20px', animation: 'pulseGlow 1.5s infinite ease-in-out' }}>🧠</div>
+          <h3 style={{ color: 'var(--text-primary)' }}>Loading Report Details...</h3>
+          <p style={{ color: 'var(--text-secondary)' }}>Retrieving clinical metrics & spatial boundaries</p>
+        </div>
+      </main>
+    );
   }
 
-  const res = analysisResults;
+  if (error || !localReport) {
+    return (
+      <main className="page-container" style={{ padding: '40px 24px', minHeight: 'calc(100vh - 80px)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div className="form-wrapper" style={{ maxWidth: '500px', textAlign: 'center', background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.2)' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>⚠️</div>
+          <h3 style={{ color: '#ef4444', marginBottom: '12px' }}>Report Not Found</h3>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>{error || 'Unable to retrieve scan data.'}</p>
+          <Link to="/patient/dashboard" className="btn btn--glow" style={{ justifyContent: 'center' }}>Back to Dashboard</Link>
+        </div>
+      </main>
+    );
+  }
+
+  const res = localReport;
 
   return (
     <main className="page-container" style={{ padding: '40px 24px', minHeight: 'calc(100vh - 80px)' }}>
@@ -186,7 +238,7 @@ export default function ScanResults() {
         </div>
 
         {/* 3 Panel View */}
-        <ThreePanelView originalImage={currentScan} />
+        <ThreePanelView originalImage={res.originalImage} />
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
           {/* Classification & Confidence */}
@@ -240,7 +292,7 @@ export default function ScanResults() {
                 📄 Print / Save as PDF
               </button>
             </div>
-            <ShareReportPrompt scanId={scanId || res._id} />
+            <ShareReportPrompt scanId={scanId || res.id || res._id} />
           </>
         )}
 

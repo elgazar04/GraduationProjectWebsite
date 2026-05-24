@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start:frontend": "vite",
+    "start:backend": "cd backend && node server.js",
+    "start:ai": "backend\\ai-service\\venv\\Scripts\\python.exe backend/ai-service/main.py",
+    "start": "concurrently -n AI,API,UI -c magenta,cyan,green \"npm run start:ai\" \"npm run start:backend\" \"npm run start:frontend\""
   },
   "dependencies": {
     "@react-three/drei": "^9.122.0",
@@ -23,6 +27,7 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
+    "concurrently": "^9.2.1",
     "eslint": "^9.13.0",
     "eslint-plugin-react": "^7.37.2",
     "eslint-plugin-react-hooks": "^5.0.0",

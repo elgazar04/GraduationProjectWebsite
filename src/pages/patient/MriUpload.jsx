@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePatientContext } from '../../contexts/PatientContext';
 import { scanService } from '../../services/scanService';
@@ -7,6 +7,14 @@ import './PatientPages.css';
 export default function MriUpload() {
   const navigate = useNavigate();
   const { intakeData, uploadScan } = usePatientContext();
+
+  useEffect(() => {
+    // If clinical intake is not complete, redirect to Intake form wizard
+    if (!intakeData.age || !intakeData.gender) {
+      navigate('/patient/intake');
+    }
+  }, [intakeData, navigate]);
+
   const fileInputRef = useRef(null);
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);

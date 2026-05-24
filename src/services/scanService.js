@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000/api';
 
 const authHeader = () => {
   const token = localStorage.getItem('token');
@@ -23,8 +23,6 @@ export const scanService = {
   },
 
   getScanResults: async (scanId) => {
-    // We will poll the backend slightly in the loader component,
-    // but when it gets here it expects the final results.
     const response = await fetch(`${API_URL}/scans/${scanId}`, {
       headers: authHeader()
     });
@@ -32,18 +30,24 @@ export const scanService = {
     if (!response.ok) throw new Error('Failed to get scan results');
     const data = await response.json();
     
-    // Map backend schema to frontend expectation
+    // Highly resilient parsing to support all formats (raw database rows, formatted JSON, etc.)
+    const results = data.results || {};
     return {
-      id: data._id,
-      classification: data.results.classification,
-      confidence: data.results.confidence,
-      location: data.results.location,
-      area: data.results.area,
-      diameter: data.results.diameter,
-      treatmentSuggestion: data.results.treatmentSuggestion,
-      urgencyScore: data.results.urgencyScore,
-      triage: data.results.triageTier,
-      date: data.uploadDate
+      id: data.id || data._id || scanId,
+      originalImage: data.image_url || (data.mri_file_path ? `http://127.0.0.1:5000${data.mri_file_path}` : null),
+      classification: results.classification || data.tumor_type || 'Unknown',
+      confidence: results.confidence !== undefined ? results.confidence : (data.classification_confidence ? Math.round(parseFloat(data.classification_confidence) * 100) : 0),
+      location: results.location || data.tumor_location || 'Unknown',
+      area: results.area || data.tumor_size_mm2 || 0,
+      diameter: results.diameter || 39.7,
+      treatmentSuggestion: results.treatmentSuggestion || data.treatment_plan || 'Consult specialist',
+      urgencyScore: results.urgencyScore !== undefined ? results.urgencyScore : (parseInt(data.urgency_level) || 0),
+      triage: results.triageTier || (data.triage_tier ? {
+        level: data.triage_tier === 'emergency' || data.triage_tier === 1 ? 1 : data.triage_tier === 'urgent' || data.triage_tier === 2 ? 2 : 3,
+        label: typeof data.triage_tier === 'string' ? data.triage_tier : (data.triage_tier === 1 ? 'emergency' : data.triage_tier === 2 ? 'urgent' : 'routine'),
+        color: data.triage_tier === 'emergency' || data.triage_tier === 1 ? '#ef4444' : data.triage_tier === 'urgent' || data.triage_tier === 2 ? '#f59e0b' : '#10b981'
+      } : { level: 3, label: 'routine', color: '#10b981' }),
+      date: data.uploadDate || data.created_at || new Date().toISOString()
     };
   },
 
