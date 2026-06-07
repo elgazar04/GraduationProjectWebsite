@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import Icon from '../shared/Icon';
 import './Footer.css';
 
 export default function Footer() {
@@ -8,7 +9,7 @@ export default function Footer() {
         <div className="footer__grid">
           <div className="footer__brand">
             <div className="footer__logo">
-              <span className="footer__logo-icon">🧠</span>
+              <span className="footer__logo-icon"><Icon name="brain" size={22} color="#00FFB2" /></span>
               <span className="footer__logo-text">BrainScan<span className="footer__logo-accent">AI</span></span>
             </div>
             <p className="footer__desc">
@@ -47,11 +48,14 @@ export default function Footer() {
         </div>
 
         <div className="footer__disclaimer">
-          <p>⚠️ <strong>Disclaimer:</strong> This system is not a substitute for professional medical diagnosis. Always consult a qualified healthcare provider for clinical decisions.</p>
+          <div className="footer__disclaimer-icon">
+            <Icon name="warning" size={18} color="#FFB930" />
+          </div>
+          <p><strong>Disclaimer:</strong> This system is not a substitute for professional medical diagnosis. Always consult a qualified healthcare provider for clinical decisions.</p>
         </div>
 
         <div className="footer__bottom">
-          <p>&copy; {new Date().getFullYear()} BrainScanAI — Graduation Project. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} BrainScanAI -- Graduation Project. All rights reserved.</p>
         </div>
       </div>
     </footer>

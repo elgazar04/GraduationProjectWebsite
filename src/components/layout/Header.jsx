@@ -1,13 +1,14 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext';
 import NotificationBell from '../shared/NotificationBell';
+import Icon from '../shared/Icon';
 import './Header.css';
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = () => { logout(); navigate('/'); };
 
@@ -22,24 +23,25 @@ export default function Header() {
     <header className="header" id="main-header">
       <div className="header__inner container">
         <Link to="/" className="header__logo" id="logo-link">
-          <span className="header__logo-icon">🧠</span>
+          <span className="header__logo-icon"><Icon name="brain" size={26} color="#00FFB2" /></span>
           <span className="header__logo-text">BrainScan<span className="header__logo-accent">AI</span></span>
         </Link>
 
-        <nav className="header__nav" id="main-nav">
-          <Link to="/" className="header__link">Home</Link>
-          <Link to="/info/tumors" className="header__link">Learn</Link>
-          <Link to="/info/faq" className="header__link">FAQ</Link>
+        <button className="header__hamburger" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle menu">
+          <Icon name="menu" size={22} />
+        </button>
+
+        <nav className={`header__nav ${mobileOpen ? 'header__nav--open' : ''}`} id="main-nav">
+          <Link to="/" className="header__link" onClick={() => setMobileOpen(false)}>Home</Link>
+          <Link to="/info/tumors" className="header__link" onClick={() => setMobileOpen(false)}>Learn</Link>
+          <Link to="/info/faq" className="header__link" onClick={() => setMobileOpen(false)}>FAQ</Link>
           {isAuthenticated && (
-            <Link to={getDashboardPath()} className="header__link">Dashboard</Link>
+            <Link to={getDashboardPath()} className="header__link" onClick={() => setMobileOpen(false)}>Dashboard</Link>
           )}
         </nav>
 
         <div className="header__actions">
           {isAuthenticated && <NotificationBell />}
-          <button className="header__theme-btn" onClick={toggleTheme} id="theme-toggle" aria-label="Toggle theme">
-            {theme === 'dark' ? '☀️' : '🌙'}
-          </button>
 
           {isAuthenticated ? (
             <div className="header__user">

@@ -56,7 +56,6 @@ router.post('/upload', protect, upload.single('image'), async (req, res) => {
     // Merge incoming intakeData on top of the DB intake data
     const mergedIntake = { ...dbIntake };
     Object.keys(intakeData).forEach(key => {
-      // If the incoming value is not null, not undefined, and not an empty string, merge it
       if (intakeData[key] !== null && intakeData[key] !== undefined && intakeData[key] !== '') {
         mergedIntake[key] = intakeData[key];
       }
@@ -124,16 +123,13 @@ router.post('/upload', protect, upload.single('image'), async (req, res) => {
       [scanId, patientProfileId, imageUrl, 'processing']
     );
 
-    // ──── REAL AI PIPELINE ────
-    // Fire-and-forget: call FastAPI, update DB when done
+    // Real AI Pipeline — fire-and-forget
     (async () => {
       try {
-        // Build multipart form for the AI service
         const form = new FormData();
         const imagePath = path.resolve(__dirname, '..', req.file.path);
         form.append('image', fs.createReadStream(imagePath));
 
-        // Map merged intake data to the 13 patient fields expected by the pipeline
         form.append('age',                    String(mergedIntake.age || 30));
         form.append('sex',                    mergedIntake.gender === 'female' ? 'F' : 'M');
         form.append('smoking_status',         mergedIntake.smoking_status || 'Never');
@@ -151,12 +147,12 @@ router.post('/upload', protect, upload.single('image'), async (req, res) => {
         console.log(`[AI] Sending MRI to FastAPI: ${AI_SERVICE_URL}/predict`);
         const aiResponse = await axios.post(`${AI_SERVICE_URL}/predict`, form, {
           headers: form.getHeaders(),
-          timeout: 60000, // 60s for GPU/CPU inference
+          timeout: 60000,
           maxContentLength: 50 * 1024 * 1024,
         });
 
         const ai = aiResponse.data;
-        console.log(`[AI] Pipeline result: ${ai.tumor_type} (${(ai.confidence * 100).toFixed(1)}%) → ${ai.triage_tier}`);
+        console.log(`[AI] Pipeline result: ${ai.tumor_type} (${(ai.confidence * 100).toFixed(1)}%) -> ${ai.triage_tier}`);
 
         // Save segmentation overlay to disk if available
         let segMaskPath = null;
@@ -167,11 +163,11 @@ router.post('/upload', protect, upload.single('image'), async (req, res) => {
           segMaskPath = `/uploads/${maskFilename}`;
         }
 
-        // Map triage_tier to DB enum (lowercase)
+        // Map triage_tier to DB enum
         const triageTierMap = { 'Emergency': 'emergency', 'Urgent': 'urgent', 'Routine': 'routine' };
         const triageTier = triageTierMap[ai.triage_tier] || 'routine';
 
-        // Update the Scans table with REAL AI results
+        // Update the Scans table with real AI results
         await db.query(
           `UPDATE Scans SET 
             status = 'completed',
@@ -208,7 +204,7 @@ router.post('/upload', protect, upload.single('image'), async (req, res) => {
           );
         }
 
-        console.log(`[AI] Scan ${scanId} fully processed and saved to DB ✓`);
+        console.log(`[AI] Scan ${scanId} fully processed and saved to DB.`);
       } catch (aiErr) {
         console.error(`[AI] Pipeline failed for scan ${scanId}:`, aiErr.message);
         await db.query("UPDATE Scans SET status = 'failed' WHERE id = ?", [scanId]);
@@ -222,41 +218,7 @@ router.post('/upload', protect, upload.single('image'), async (req, res) => {
   }
 });
 
-// @route   GET /api/scans/:id
-router.get('/:id', protect, async (req, res) => {
-  try {
-    const [scans] = await db.query('SELECT * FROM Scans WHERE id = ?', [req.params.id]);
-    if (scans.length === 0) return res.status(404).json({ message: 'Scan not found' });
-    const scan = scans[0];
-
-    // For frontend mapping compatibility:
-    const formattedData = {
-      _id: scan.id,
-      uploadDate: scan.created_at,
-      image_url: scan.mri_file_path ? `http://127.0.0.1:5000${scan.mri_file_path}` : null,
-      results: {
-        classification: scan.tumor_type,
-        confidence: scan.classification_confidence ? scan.classification_confidence * 100 : 0,
-        location: scan.tumor_location,
-        area: scan.tumor_size_mm2,
-        diameter: 39.7, // mock
-        treatmentSuggestion: scan.treatment_plan,
-        urgencyScore: parseInt(scan.urgency_level) || 0,
-        triageTier: {
-          level: scan.triage_tier === 'emergency' ? 1 : scan.triage_tier === 'urgent' ? 2 : 3,
-          label: scan.triage_tier,
-          color: scan.triage_tier === 'emergency' ? '#ef4444' : scan.triage_tier === 'urgent' ? '#f59e0b' : '#10b981'
-        }
-      }
-    };
-
-    res.json(formattedData);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
+// IMPORTANT: /history/me MUST come before /:id to avoid Express matching "history" as an ID
 // @route   GET /api/scans/history/me
 router.get('/history/me', protect, async (req, res) => {
   try {
@@ -265,7 +227,6 @@ router.get('/history/me', protect, async (req, res) => {
 
     const [scans] = await db.query('SELECT * FROM Scans WHERE patient_id = ? ORDER BY created_at DESC', [profiles[0].id]);
     
-    // Map to both legacy and modern formats to support all frontend pages perfectly
     const formatted = scans.map(scan => ({
       id: scan.id,
       _id: scan.id,
@@ -287,8 +248,43 @@ router.get('/history/me', protect, async (req, res) => {
   }
 });
 
+// @route   GET /api/scans/:id
+router.get('/:id', protect, async (req, res) => {
+  try {
+    const [scans] = await db.query('SELECT * FROM Scans WHERE id = ?', [req.params.id]);
+    if (scans.length === 0) return res.status(404).json({ message: 'Scan not found' });
+    const scan = scans[0];
+
+    const formattedData = {
+      _id: scan.id,
+      uploadDate: scan.created_at,
+      image_url: scan.mri_file_path ? `http://127.0.0.1:5000${scan.mri_file_path}` : null,
+      segmentation_mask_url: scan.segmentation_mask_path ? `http://127.0.0.1:5000${scan.segmentation_mask_path}` : null,
+      results: {
+        classification: scan.tumor_type,
+        confidence: scan.classification_confidence ? scan.classification_confidence * 100 : 0,
+        location: scan.tumor_location,
+        area: scan.tumor_size_mm2,
+        hemisphere: scan.hemisphere,
+        diameter: 39.7,
+        treatmentSuggestion: scan.treatment_plan,
+        urgencyScore: parseInt(scan.urgency_level) || 0,
+        triageTier: {
+          level: scan.triage_tier === 'emergency' ? 1 : scan.triage_tier === 'urgent' ? 2 : 3,
+          label: scan.triage_tier,
+          color: scan.triage_tier === 'emergency' ? '#ef4444' : scan.triage_tier === 'urgent' ? '#f59e0b' : '#10b981'
+        }
+      }
+    };
+
+    res.json(formattedData);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // @route   POST /api/scans/:id/share
-// @desc    Generate a secure sharing link/token for a scan
 router.post('/:id/share', protect, async (req, res) => {
   try {
     const [scans] = await db.query('SELECT id, patient_id FROM Scans WHERE id = ?', [req.params.id]);
@@ -312,7 +308,6 @@ router.post('/:id/share', protect, async (req, res) => {
 });
 
 // @route   GET /api/scans/shared/:token
-// @desc    View a shared scan without needing auth (or specifically for doctors)
 router.get('/shared/:token', async (req, res) => {
   try {
     const [scans] = await db.query('SELECT * FROM Scans WHERE share_token = ?', [req.params.token]);
@@ -328,7 +323,10 @@ router.get('/shared/:token', async (req, res) => {
       tumor_location: scan.tumor_location,
       classification_confidence: scan.classification_confidence,
       tumor_size_mm2: scan.tumor_size_mm2,
-      treatment_plan: scan.treatment_plan
+      hemisphere: scan.hemisphere,
+      treatment_plan: scan.treatment_plan,
+      triage_tier: scan.triage_tier,
+      urgency_level: scan.urgency_level
     });
   } catch (err) {
     console.error(err);

@@ -75,7 +75,7 @@ router.get('/:id', protect, async (req, res) => {
              s.tumor_location, s.tumor_size_mm2, s.classification_confidence, 
              s.treatment_plan, s.urgency_level, s.triage_tier,
              u.name as patient_name, u.email as patient_email,
-             p.age, p.gender, p.family_history, p.prior_surgeries, p.neurological_symptoms, p.headache_severity, p.functional_status
+             p.age, p.gender, p.family_cancer_history, p.previous_treatment, p.neurological_symptoms, p.headache_severity, p.functional_status, p.seizure_history, p.immunosuppressed, p.comorbidities
       FROM Consultations c
       JOIN Scans s ON c.scan_id = s.id
       JOIN PatientProfiles p ON c.patient_id = p.id
@@ -223,9 +223,10 @@ router.put('/:id/status', protect, async (req, res) => {
     if (consults.length > 0) {
       const [patients] = await db.query('SELECT user_id FROM PatientProfiles WHERE id = ?', [consults[0].patient_id]);
       if (patients.length > 0) {
+        const notifType = status === 'accepted' ? 'consultation_accepted' : status === 'declined' ? 'consultation_declined' : 'consultation_requested';
         await db.query(
           'INSERT INTO Notifications (id, user_id, type, message, reference_id) VALUES (UUID(), ?, ?, ?, ?)',
-          [patients[0].user_id, 'consultation_update', `Your consultation was ${status}`, req.params.id]
+          [patients[0].user_id, notifType, `Your consultation was ${status}.`, req.params.id]
         );
       }
     }

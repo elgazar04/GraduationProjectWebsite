@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import Icon from '../../components/shared/Icon';
 import '../patient/PatientPages.css';
 
 export default function Login() {
@@ -28,11 +29,12 @@ export default function Login() {
   };
 
   return (
-    <main className="page-container" style={{ padding: '40px 24px', minHeight: 'calc(100vh - 80px)' }}>
+    <main className="page-container">
       <div className="form-wrapper" style={{ maxWidth: '460px', padding: '48px 40px' }}>
-        {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '8px' }}>🧠</div>
+          <div style={{ width: '56px', height: '56px', margin: '0 auto 12px', background: 'rgba(0,255,178,0.08)', borderRadius: '16px', border: '1px solid rgba(0,255,178,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="brain" size={30} color="#00FFB2" />
+          </div>
         </div>
 
         <h1 className="page-title" style={{ textAlign: 'center', fontSize: '2rem' }}>Welcome Back</h1>
@@ -41,29 +43,14 @@ export default function Login() {
         </p>
 
         {error && (
-          <div style={{
-            background: 'rgba(239,68,68,0.08)',
-            color: '#ef4444',
-            padding: '12px 16px',
-            borderRadius: '10px',
-            marginBottom: '20px',
-            textAlign: 'center',
-            border: '1px solid rgba(239,68,68,0.2)',
-            fontSize: '0.9rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px'
-          }}>
-            <span>⚠️</span> {error}
+          <div className="alert-banner alert-banner--danger" style={{ marginBottom: '20px', justifyContent: 'center' }}>
+            <Icon name="alertCircle" size={18} color="var(--color-danger)" /> {error}
           </div>
         )}
 
         <form className="intake-form" onSubmit={handleSubmit} style={{ gap: '20px' }}>
           <div className="form-group">
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '0.85rem' }}>📧</span> Email Address
-            </label>
+            <label><Icon name="mail" size={16} /> Email Address</label>
             <input
               id="login-email"
               type="email"
@@ -76,9 +63,7 @@ export default function Login() {
           </div>
 
           <div className="form-group">
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '0.85rem' }}>🔒</span> Password
-            </label>
+            <label><Icon name="lock" size={16} /> Password</label>
             <div style={{ position: 'relative' }}>
               <input
                 id="login-password"
@@ -96,14 +81,14 @@ export default function Login() {
                 style={{
                   position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
                   background: 'transparent', border: 'none', cursor: 'pointer',
-                  fontSize: '1rem', color: 'rgba(255,255,255,0.4)', padding: '4px',
-                  transition: 'color 0.2s'
+                  padding: '4px', color: 'var(--text-tertiary)',
+                  transition: 'color 0.2s', display: 'flex'
                 }}
-                onMouseOver={e => e.currentTarget.style.color = 'rgba(255,255,255,0.8)'}
-                onMouseOut={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
+                onMouseOver={e => e.currentTarget.style.color = 'var(--text-primary)'}
+                onMouseOut={e => e.currentTarget.style.color = 'var(--text-tertiary)'}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? '🙈' : '👁️'}
+                <Icon name={showPassword ? 'eyeOff' : 'eye'} size={18} />
               </button>
             </div>
           </div>
@@ -118,7 +103,7 @@ export default function Login() {
             >
               {isLoading ? (
                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
-                  <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⏳</span>
+                  <span className="spinner"></span>
                   Signing In...
                 </span>
               ) : 'Sign In'}
@@ -128,17 +113,10 @@ export default function Login() {
 
         <div style={{ marginTop: '28px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
           Don't have an account?{' '}
-          <Link to="/register" style={{ color: '#1e90ff', textDecoration: 'none', fontWeight: 600 }}>
+          <Link to="/register" style={{ color: 'var(--neon-cyan)', textDecoration: 'none', fontWeight: 600 }}>
             Create one
           </Link>
         </div>
-
-        <style>{`
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
       </div>
     </main>
   );
