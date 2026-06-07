@@ -37,3 +37,7 @@ backend/uploads/*
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables
+.env
+backend/.env
